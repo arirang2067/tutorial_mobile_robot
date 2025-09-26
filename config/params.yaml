@@ -1,0 +1,18 @@
+diff_kinematics_demo:
+  ros__parameters:
+    # kinematics.cpp 파라미터
+    wheel_radius: 0.08          # [m]
+    wheel_separation: 0.42      # [m]
+    reduction: 4
+    maxrpm: 350
+    odom_frame_id: "odom"
+    base_frame_id: "base_link"
+    left_wheel_joint: "wheel_left_joint"
+    right_wheel_joint: "wheel_right_joint"
+
+    # main.cpp 파라미터
+    max_linear_speed: 0.6       # [m/s]
+    max_angular_speed: 1.8      # [rad/s]
+    max_linear_accel: 0.8       # [m/s^2]
+    max_angular_accel: 1.8      # [rad/s^2]
+    control_rate_hz: 50.0
