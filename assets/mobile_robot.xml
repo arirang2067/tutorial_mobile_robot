@@ -11,14 +11,14 @@
 
   <asset>
     <texture type="skybox" builtin="gradient" rgb1=".4 .6 .8" rgb2="0 0 0" width="256" height="256"/>
-    <material name="ground" rgba=".9 .9 .9 1"/>
+    <material name="ground"  rgba=".9 .9 .9 1"/>
     <material name="chassis" rgba=".2 .2 .2 1"/>
-    <material name="wheel" rgba=".1 .1 .1 1"/>
+    <material name="wheel"   rgba=".1 .1 .1 1"/>
   </asset>
 
   <worldbody>
     <!-- 평면 -->
-    <geom name="floor" type="plane" size="4 4 0.1" material="ground" rgba="0.9 0.9 0.9 1"/>
+    <geom name="floor" type="plane" size="4 4 0.1" material="ground"/>
 
     <!-- 베이스: free joint(위치/자세 7자유도) -->
     <body name="base" pos="0 0 0.05">
@@ -28,7 +28,7 @@
       <!-- 왼쪽 바퀴 (y축 힌지 회전) -->
       <body name="left_wheel" pos="0  0.21 0.05">
         <joint name="left_wheel_joint" type="hinge" axis="0 1 0" limited="false"/>
-        <geom type="cylinder" size="0.08 0.02" material="wheel" rgba="0.1 0.1 0.1 1"/>
+        <geom type="cylinder" size="0.08 0.02" material="wheel"/>
       </body>
 
       <!-- 오른쪽 바퀴 -->

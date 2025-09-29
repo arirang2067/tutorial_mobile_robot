@@ -93,8 +93,9 @@ if (MUJOCO_INCLUDE_DIR AND MUJOCO_LIBRARY)
   install(TARGETS mujoco_sim_node
     DESTINATION lib/${PROJECT_NAME})
 
-  install(FILES resource/mobile_robot.xml
-    DESTINATION share/${PROJECT_NAME}/resource)
+  install(DIRECTORY assets/
+    DESTINATION share/${PROJECT_NAME}/assets
+  )
 
 else()
   message(WARNING "MuJoCo NOT found. Skipping mujoco_sim_node build.")

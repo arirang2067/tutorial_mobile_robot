@@ -35,7 +35,7 @@ public:
         std::string mjcf_path = this->declare_parameter<std::string>("mjcf_path", "");
         if (mjcf_path.empty()) {
             auto share = ament_index_cpp::get_package_share_directory("tutorial_ros2_motor");
-            mjcf_path = share + "/resource/mobile_robot.xml";
+            mjcf_path = share + "/assets/mobile_robot.xml";
         }
 
         // MuJoCo 초기화

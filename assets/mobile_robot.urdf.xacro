@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+<robot name="mobile_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- 파라미터 -->
+  <xacro:property name="wheel_radius" value="0.08"/>
+  <xacro:property name="wheel_length" value="0.42"/> <!-- 바퀴 중심 간 거리 -->
+  <xacro:property name="base_size_x"  value="0.30"/> <!-- 박스 전체 폭(길이*2*size) -->
+  <xacro:property name="base_size_y"  value="0.40"/>
+  <xacro:property name="base_size_z"  value="0.10"/>
+
+  <link name="world"/>
+  <joint name="world_to_base" type="fixed">
+    <parent link="world"/>
+    <child link="base_link"/>
+  </joint>
+
+  <!-- 링크: 베이스 -->
+  <link name="base_link">
+    <visual>
+      <geometry><box size="${base_size_x} ${base_size_y} ${base_size_z}"/></geometry>
+      <material name="chassis_color">
+        <color rgba="0.2 0.2 0.25 1.0"/>
+      </material>
+      <origin xyz="0 0 ${wheel_radius - 0.03}" rpy="0 0 0"/>
+    </visual>
+    <collision>
+      <geometry><box size="${base_size_x} ${base_size_y} ${base_size_z}"/></geometry>
+      <origin xyz="0 0 ${wheel_radius - 0.03}" rpy="0 0 0"/>
+    </collision>
+    <inertial>
+      <mass value="10.0"/>
+      <inertia ixx="0.2" iyy="0.2" izz="0.2" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
+
+  <!-- 왼쪽 바퀴 링크 -->
+  <link name="wheel_left_link">
+    <visual>
+      <geometry><cylinder radius="${wheel_radius}" length="0.04"/></geometry>
+      <material name="wheel_color"><color rgba="0.1 0.1 0.1 1.0"/></material>
+      <origin xyz="0 ${wheel_length/2} ${wheel_radius}" rpy="0 0 0"/>
+    </visual>
+    <collision>
+      <geometry><cylinder radius="${wheel_radius}" length="0.04"/></geometry>
+      <origin xyz="0 ${wheel_length/2} ${wheel_radius}" rpy="0 0 0"/>
+    </collision>
+    <inertial>
+      <mass value="1.0"/>
+      <inertia ixx="0.01" iyy="0.01" izz="0.01" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
+
+  <!-- 오른쪽 바퀴 링크 -->
+  <link name="wheel_right_link">
+    <visual>
+      <geometry><cylinder radius="${wheel_radius}" length="0.04"/></geometry>
+      <material name="wheel_color"/>
+      <origin xyz="0 ${-wheel_length/2} ${wheel_radius}" rpy="0 0 0"/>
+    </visual>
+    <collision>
+      <geometry><cylinder radius="${wheel_radius}" length="0.04"/></geometry>
+      <origin xyz="0 ${-wheel_length/2} ${wheel_radius}" rpy="0 0 0"/>
+    </collision>
+    <inertial>
+      <mass value="1.0"/>
+      <inertia ixx="0.01" iyy="0.01" izz="0.01" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
+
+  <!-- 힌지 회전축 = y축(로봇 오른쪽이 +y) -->
+  <joint name="wheel_left_joint" type="continuous">
+    <parent link="base_link"/>
+    <child  link="wheel_left_link"/>
+    <origin xyz="0 ${wheel_length/2} ${wheel_radius}" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+  </joint>
+
+  <joint name="wheel_right_joint" type="continuous">
+    <parent link="base_link"/>
+    <child  link="wheel_right_link"/>
+    <origin xyz="0 ${-wheel_length/2} ${wheel_radius}" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+  </joint>
+
+</robot>

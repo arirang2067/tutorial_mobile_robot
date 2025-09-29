@@ -1,0 +1,20 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz_default_plugins/TF
+      Enabled: true
+      Name: TF
+    - Class: rviz_default_plugins/RobotModel
+      Enabled: true
+      Name: RobotModel
+    - Class: rviz_default_plugins/Odometry
+      Enabled: true
+      Name: Odom
+      Topic: /odom
+  Global Options:
+    Fixed Frame: odom
+  Tools:
+    - Class: rviz_default_plugins/Interact
