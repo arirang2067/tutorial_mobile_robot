@@ -47,6 +47,59 @@ ament_target_dependencies(tutorial_motor_node
   tf2_ros
 )
 
+set(MUJOCO_HINT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/mujoco-3.3.0")
+
+find_path(MUJOCO_INCLUDE_DIR mujoco/mujoco.h
+  HINTS
+    $ENV{MUJOCO_DIR}/include
+    ${MUJOCO_HINT_DIR}/include
+    /usr/local/include
+    /usr/include
+)
+
+find_library(MUJOCO_LIBRARY NAMES mujoco libmujoco
+  HINTS
+    $ENV{MUJOCO_DIR}/lib
+    ${MUJOCO_HINT_DIR}/lib
+    /usr/local/lib
+    /usr/lib
+)
+
+if (MUJOCO_INCLUDE_DIR AND MUJOCO_LIBRARY)
+  message(STATUS "MuJoCo found: ${MUJOCO_INCLUDE_DIR}, ${MUJOCO_LIBRARY}")
+  include_directories(${MUJOCO_INCLUDE_DIR})
+
+  add_library(mujoco_sim_obj OBJECT
+    src/mujoco_sim.cpp
+  )
+  target_include_directories(mujoco_sim_obj PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+
+  add_executable(mujoco_sim_node
+    src/mujoco_sim_node.cpp
+    $<TARGET_OBJECTS:mujoco_sim_obj>
+  )
+  ament_target_dependencies(mujoco_sim_node
+    rclcpp geometry_msgs nav_msgs sensor_msgs tf2_ros ament_index_cpp)
+
+  # 런타임에 libmujoco.so를 찾게 하려면(선택) RPATH 또는 LD_LIBRARY_PATH 중 택1
+  # 여기서는 RPATH도 설정해둡니다.
+  target_link_libraries(mujoco_sim_node ${MUJOCO_LIBRARY})
+  set_target_properties(mujoco_sim_node PROPERTIES
+    BUILD_RPATH "${MUJOCO_HINT_DIR}/lib"
+    INSTALL_RPATH "${MUJOCO_HINT_DIR}/lib"
+  )
+
+  install(TARGETS mujoco_sim_node
+    DESTINATION lib/${PROJECT_NAME})
+
+  install(FILES resource/mobile_robot.xml
+    DESTINATION share/${PROJECT_NAME}/resource)
+
+else()
+  message(WARNING "MuJoCo NOT found. Skipping mujoco_sim_node build.")
+endif()
+
 install(TARGETS
   tutorial_ros2_motor_core
   tutorial_motor_node
