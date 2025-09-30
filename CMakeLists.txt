@@ -22,7 +22,7 @@ find_package(std_msgs REQUIRED)
 find_package(ament_index_cpp REQUIRED)
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 경로(헤더/리소스는 하나의 assets 디렉터리만 사용)
+# 경로(헤더/리소스는 assets 하나만 사용)
 # ─────────────────────────────────────────────────────────────────────────────
 set(PROJ_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(PROJ_ASSETS  ${CMAKE_CURRENT_SOURCE_DIR}/assets)
@@ -65,39 +65,36 @@ ament_target_dependencies(tutorial_motor_node
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
-# MuJoCo (HOME에 설치 가정)
+# MuJoCo: 패키지 내부 고정
 # ─────────────────────────────────────────────────────────────────────────────
-# ── MuJoCo 탐색
-set(MUJOCO_DEFAULT_ROOT "$ENV{HOME}/mujoco-3.3.0")
-set(MUJOCO_ROOT "${MUJOCO_DEFAULT_ROOT}" CACHE PATH "Path to MuJoCo root (contains include/ and lib/)")
+# 소스 내 MuJoCo 루트
+set(MUJOCO_SRC_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/mujoco-3.3.0")
+# 설치 후 MuJoCo 루트 (install/share/<pkg>/mujoco-3.3.0)
+set(MUJOCO_INSTALL_ROOT "${CMAKE_INSTALL_PREFIX}/share/${PROJECT_NAME}/mujoco-3.3.0")
 
+# 빌드 시 탐색(소스 트리)
 find_path(MUJOCO_INCLUDE_DIR
   NAMES mujoco/mujoco.h mujoco.h
   HINTS
-    ${MUJOCO_ROOT}
-    ${MUJOCO_ROOT}/include
-    /usr/local/include
-    /usr/include
+    ${MUJOCO_SRC_ROOT}
+    ${MUJOCO_SRC_ROOT}/include
   PATH_SUFFIXES
     include
     include/mujoco
 )
-
 find_library(MUJOCO_LIBRARY
   NAMES
-    mujoco
-    libmujoco.so.3
-    libmujoco.so.3.3.0
+    mujoco             # libmujoco.so
+    libmujoco.so.3     # SONAME
+    libmujoco.so.3.3.0 # full version
   HINTS
-    ${MUJOCO_ROOT}
-    ${MUJOCO_ROOT}/lib
-    /usr/local/lib
-    /usr/lib
+    ${MUJOCO_SRC_ROOT}
+    ${MUJOCO_SRC_ROOT}/lib
   PATH_SUFFIXES lib
 )
 
 if(MUJOCO_INCLUDE_DIR AND MUJOCO_LIBRARY)
-  message(STATUS "MuJoCo found:")
+  message(STATUS "MuJoCo found (in source tree):")
   message(STATUS "  include: ${MUJOCO_INCLUDE_DIR}")
   message(STATUS "  library: ${MUJOCO_LIBRARY}")
 
@@ -122,27 +119,26 @@ if(MUJOCO_INCLUDE_DIR AND MUJOCO_LIBRARY)
   ament_target_dependencies(mujoco_sim_node
     rclcpp geometry_msgs nav_msgs sensor_msgs tf2_ros ament_index_cpp
   )
+  # plain 모드로 통일
   target_link_libraries(mujoco_sim_node
     ${MUJOCO_LIBRARY}
   )
 
-  # 런타임 탐색(RPATH)
   set_target_properties(mujoco_sim_node PROPERTIES
-    BUILD_RPATH "${MUJOCO_ROOT}/lib"
-    INSTALL_RPATH "\$ORIGIN;${MUJOCO_ROOT}/lib"
+    BUILD_RPATH "${MUJOCO_SRC_ROOT}/lib"
+    INSTALL_RPATH "\$ORIGIN/../../share/${PROJECT_NAME}/mujoco-3.3.0/lib"
   )
 
   install(TARGETS mujoco_sim_node
     RUNTIME DESTINATION lib/${PROJECT_NAME}
   )
 else()
-  message(WARNING "MuJoCo NOT found at ${MUJOCO_ROOT}.
-  헤더는 include/(mujoco/)mujoco.h, 라이브러리는 lib/libmujoco.so* 경로에 있어야 합니다.
-  실제 설치 경로를 -DMUJOCO_ROOT=/정확한/경로 로 지정하세요.")
+  message(WARNING "MuJoCo NOT found in ${MUJOCO_SRC_ROOT}.
+  패키지 내부에 mujoco-3.3.0/include 및 lib이 있는지 확인하세요.")
 endif()
 
 # ─────────────────────────────────────────────────────────────────────────────
-# robot_description 토픽 퍼블리셔 — RViz Topic 모드용
+# /robot_description 토픽 퍼블리셔 — RViz Topic 모드용
 # ─────────────────────────────────────────────────────────────────────────────
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/robot_description_topic_publisher.cpp")
   add_executable(robot_description_topic_publisher
@@ -153,6 +149,8 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/robot_description_topic_publisher.cpp
     $<INSTALL_INTERFACE:include>
   )
   ament_target_dependencies(robot_description_topic_publisher rclcpp std_msgs)
+  install(TARGETS robot_description_topic_publisher
+    RUNTIME DESTINATION lib/${PROJECT_NAME})
 endif()
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -166,24 +164,21 @@ install(TARGETS
   LIBRARY DESTINATION lib
 )
 
-if(TARGET mujoco_sim_node)
-  install(TARGETS mujoco_sim_node
-    RUNTIME DESTINATION lib/${PROJECT_NAME}
-  )
-endif()
-
-if(TARGET robot_description_topic_publisher)
-  install(TARGETS robot_description_topic_publisher
-    RUNTIME DESTINATION lib/${PROJECT_NAME}
-  )
-endif()
-
 install(DIRECTORY include/
   DESTINATION include
 )
 
+# 리소스는 assets 디렉터리 하나로 통일
 install(DIRECTORY assets/ DESTINATION share/${PROJECT_NAME}/assets)
 
+# 런치 파일
 install(DIRECTORY launch/ DESTINATION share/${PROJECT_NAME}/launch)
+
+# MuJoCo 폴더를 패키지와 함께 설치
+if(EXISTS "${MUJOCO_SRC_ROOT}")
+  install(DIRECTORY ${MUJOCO_SRC_ROOT}/
+    DESTINATION share/${PROJECT_NAME}/mujoco-3.3.0
+  )
+endif()
 
 ament_package()
