@@ -15,7 +15,7 @@ from launch_ros.actions import Node
 def generate_launch_description():
     # ── 런치 인자 (필요시 수정)
     device_arg        = DeclareLaunchArgument('device',        default_value='/dev/ttyUSB0')
-    baudrate_arg      = DeclareLaunchArgument('baudrate',      default_value='115200')
+    baudrate_arg      = DeclareLaunchArgument('baudrate',      default_value='19200')
     pc_id_arg         = DeclareLaunchArgument('pc_id',         default_value='85')   # 0x55
     mdt_id_arg        = DeclareLaunchArgument('mdt_id',        default_value='170')  # 0xAA
     mdui_id_arg       = DeclareLaunchArgument('mdui_id',       default_value='171')  # 0xAB

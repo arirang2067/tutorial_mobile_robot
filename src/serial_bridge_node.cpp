@@ -20,7 +20,7 @@ public:
     {
         // 파라미터
         device_   = this->declare_parameter<std::string>("device", "/dev/ttyUSB0");
-        baudrate_ = this->declare_parameter<int>("baudrate", 115200);
+        baudrate_ = this->declare_parameter<int>("baudrate", 19200);
         left_id_  = this->declare_parameter<int>("left_motor_id", 1);
         right_id_ = this->declare_parameter<int>("right_motor_id", 2);
         pid_set_speed_ = this->declare_parameter<int>("pid_set_speed", 0x10);
