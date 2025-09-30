@@ -1,21 +1,20 @@
 <?xml version="1.0"?>
-<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>tutorial_ros2_motor</name>
-  <version>0.0.0</version>
-  <description>CrashLab Tutorial Motor Control System</description>
-  <maintainer email="arirang2067@hanyang.ac.kr">chris20</maintainer>
-  <license>Apache License 2.0</license>
+  <name>tutorial_mobile_robot</name>
+  <version>0.0.1</version>
+  <description>ROS2 Jazzy educational differential-drive node: controller + kinematics</description>
+  <maintainer email="arirang2067@hanyang.ac.kr">Chris Chun</maintainer>
+  <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <depend>rclcpp</depend>
-  <depend>pigpiod_if2</depend>
-  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>tf2</depend>
+  <depend>tf2_ros</depend>
   <depend>ament_index_cpp</depend>
-
-  <test_depend>ament_lint_auto</test_depend>
-  <test_depend>ament_lint_common</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
