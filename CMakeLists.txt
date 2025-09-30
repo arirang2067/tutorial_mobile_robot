@@ -40,7 +40,6 @@ target_include_directories(tutorial_mobile_robot_core PUBLIC
   $<BUILD_INTERFACE:${PROJ_INCLUDE}>
   $<INSTALL_INTERFACE:include>
 )
-# 코어가 rclcpp를 직접 쓰지 않는다면 아래 줄은 제거 가능
 ament_target_dependencies(tutorial_mobile_robot_core rclcpp)
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -66,9 +65,9 @@ ament_target_dependencies(tutorial_motor_node
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
-# MuJoCo (수업 가정: 항상 HOME에 설치, 경로 고정 가능)
+# MuJoCo (HOME에 설치 가정)
 # ─────────────────────────────────────────────────────────────────────────────
-# ── MuJoCo 탐색 (버전 파일까지 지원)
+# ── MuJoCo 탐색
 set(MUJOCO_DEFAULT_ROOT "$ENV{HOME}/mujoco-3.3.0")
 set(MUJOCO_ROOT "${MUJOCO_DEFAULT_ROOT}" CACHE PATH "Path to MuJoCo root (contains include/ and lib/)")
 
@@ -86,9 +85,9 @@ find_path(MUJOCO_INCLUDE_DIR
 
 find_library(MUJOCO_LIBRARY
   NAMES
-    mujoco             # libmujoco.so
-    libmujoco.so.3     # SONAME 버전
-    libmujoco.so.3.3.0 # 완전 버전
+    mujoco
+    libmujoco.so.3
+    libmujoco.so.3.3.0
   HINTS
     ${MUJOCO_ROOT}
     ${MUJOCO_ROOT}/lib
@@ -123,7 +122,6 @@ if(MUJOCO_INCLUDE_DIR AND MUJOCO_LIBRARY)
   ament_target_dependencies(mujoco_sim_node
     rclcpp geometry_msgs nav_msgs sensor_msgs tf2_ros ament_index_cpp
   )
-  # ★ plain 모드로 통일 (PRIVATE 키워드 사용 금지: ament_target_dependencies가 plain 모드 사용)
   target_link_libraries(mujoco_sim_node
     ${MUJOCO_LIBRARY}
   )
@@ -144,7 +142,7 @@ else()
 endif()
 
 # ─────────────────────────────────────────────────────────────────────────────
-# (선택) /robot_description 토픽 퍼블리셔 — RViz Topic 모드용
+# robot_description 토픽 퍼블리셔 — RViz Topic 모드용
 # ─────────────────────────────────────────────────────────────────────────────
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/robot_description_topic_publisher.cpp")
   add_executable(robot_description_topic_publisher
@@ -158,7 +156,7 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/robot_description_topic_publisher.cpp
 endif()
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 설치(install) — 리소스는 오직 assets 디렉터리만 사용
+# 설치(install)
 # ─────────────────────────────────────────────────────────────────────────────
 install(TARGETS
   tutorial_mobile_robot_core
@@ -184,10 +182,8 @@ install(DIRECTORY include/
   DESTINATION include
 )
 
-# ★ 리소스 전부 assets로 통일
 install(DIRECTORY assets/ DESTINATION share/${PROJECT_NAME}/assets)
 
-# 런치 파일을 별도 디렉터리로 유지하는 경우
 install(DIRECTORY launch/ DESTINATION share/${PROJECT_NAME}/launch)
 
 ament_package()
