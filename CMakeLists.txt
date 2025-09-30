@@ -65,14 +65,39 @@ ament_target_dependencies(mobile_robot_node
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
+# 시리얼 브리지 노드 (토픽→시리얼)
+# ─────────────────────────────────────────────────────────────────────────────
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/serial_bridge_node.cpp")
+  add_executable(serial_bridge_node
+    src/serial_bridge_node.cpp
+  )
+  target_include_directories(serial_bridge_node PUBLIC
+    $<BUILD_INTERFACE:${PROJ_INCLUDE}>
+    $<INSTALL_INTERFACE:include>
+  )
+  # core 유틸(예: serial_com.hpp)을 재사용한다면 링크 유지
+  target_link_libraries(serial_bridge_node
+    tutorial_mobile_robot_core
+  )
+  ament_target_dependencies(serial_bridge_node
+    rclcpp
+    std_msgs
+    geometry_msgs
+    sensor_msgs
+  )
+  install(TARGETS serial_bridge_node
+    RUNTIME DESTINATION lib/${PROJECT_NAME}
+  )
+else()
+  message(WARNING "serial_bridge_node.cpp not found. Skipping serial_bridge_node build.")
+endif()
+
+# ─────────────────────────────────────────────────────────────────────────────
 # MuJoCo: 패키지 내부 고정
 # ─────────────────────────────────────────────────────────────────────────────
-# 소스 내 MuJoCo 루트
 set(MUJOCO_SRC_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/mujoco-3.3.0")
-# 설치 후 MuJoCo 루트 (install/share/<pkg>/mujoco-3.3.0)
 set(MUJOCO_INSTALL_ROOT "${CMAKE_INSTALL_PREFIX}/share/${PROJECT_NAME}/mujoco-3.3.0")
 
-# 빌드 시 탐색(소스 트리)
 find_path(MUJOCO_INCLUDE_DIR
   NAMES mujoco/mujoco.h mujoco.h
   HINTS
@@ -84,9 +109,9 @@ find_path(MUJOCO_INCLUDE_DIR
 )
 find_library(MUJOCO_LIBRARY
   NAMES
-    mujoco             # libmujoco.so
-    libmujoco.so.3     # SONAME
-    libmujoco.so.3.3.0 # full version
+    mujoco
+    libmujoco.so.3
+    libmujoco.so.3.3.0
   HINTS
     ${MUJOCO_SRC_ROOT}
     ${MUJOCO_SRC_ROOT}/lib
@@ -119,16 +144,13 @@ if(MUJOCO_INCLUDE_DIR AND MUJOCO_LIBRARY)
   ament_target_dependencies(mujoco_sim_node
     rclcpp geometry_msgs nav_msgs sensor_msgs tf2_ros ament_index_cpp
   )
-  # plain 모드로 통일
   target_link_libraries(mujoco_sim_node
     ${MUJOCO_LIBRARY}
   )
-
   set_target_properties(mujoco_sim_node PROPERTIES
     BUILD_RPATH "${MUJOCO_SRC_ROOT}/lib"
     INSTALL_RPATH "\$ORIGIN/../../share/${PROJECT_NAME}/mujoco-3.3.0/lib"
   )
-
   install(TARGETS mujoco_sim_node
     RUNTIME DESTINATION lib/${PROJECT_NAME}
   )
@@ -168,13 +190,14 @@ install(DIRECTORY include/
   DESTINATION include
 )
 
-# 리소스는 assets 디렉터리 하나로 통일
-install(DIRECTORY assets/ DESTINATION share/${PROJECT_NAME}/assets)
+install(DIRECTORY assets/
+  DESTINATION share/${PROJECT_NAME}/assets
+)
 
-# 런치 파일
-install(DIRECTORY launch/ DESTINATION share/${PROJECT_NAME}/launch)
+install(DIRECTORY launch/
+  DESTINATION share/${PROJECT_NAME}/launch
+)
 
-# MuJoCo 폴더를 패키지와 함께 설치
 if(EXISTS "${MUJOCO_SRC_ROOT}")
   install(DIRECTORY ${MUJOCO_SRC_ROOT}/
     DESTINATION share/${PROJECT_NAME}/mujoco-3.3.0

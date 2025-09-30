@@ -10,7 +10,6 @@ def generate_launch_description():
     assets      = PathJoinSubstitution([pkg_share, 'assets'])
     urdf_xacro  = PathJoinSubstitution([assets, 'mobile_robot.urdf.xacro'])
     mjcf        = PathJoinSubstitution([assets, 'mobile_robot.xml'])
-    rviz_cfg    = PathJoinSubstitution([assets, 'mobile_robot.rviz'])
 
     use_sim_time_arg = DeclareLaunchArgument('use_sim_time', default_value='false')
     publish_tf_arg   = DeclareLaunchArgument('publish_tf',   default_value='true')
@@ -26,7 +25,6 @@ def generate_launch_description():
         value_type=str
     )
 
-    # joint_state_publisher
     jsp = Node(
         package='joint_state_publisher',
         executable='joint_state_publisher',
@@ -34,7 +32,6 @@ def generate_launch_description():
         output='screen'
     )
 
-    # robot_state_publisher (TF 생성용)
     rsp = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
@@ -45,7 +42,6 @@ def generate_launch_description():
         output='screen'
     )
 
-    # odom -> base_footprint 정적 TF
     static_tf = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
@@ -57,7 +53,6 @@ def generate_launch_description():
         output='screen'
     )
 
-    # robot_description 토픽 퍼블리셔
     desc_pub = Node(
         package='tutorial_mobile_robot',
         executable='robot_description_topic_publisher',
@@ -67,7 +62,6 @@ def generate_launch_description():
         output='screen'
     )
 
-    # MuJoCo 시뮬
     sim = Node(
         package='tutorial_mobile_robot',
         executable='mujoco_sim_node',
@@ -80,17 +74,7 @@ def generate_launch_description():
         output='screen'
     )
 
-    # RViz2
-    rviz = Node(
-        package='rviz2',
-        executable='rviz2',
-        name='rviz',
-        arguments=['-d', rviz_cfg],
-        parameters=[{'use_sim_time': use_sim_time}],
-        output='screen'
-    )
-
     return LaunchDescription([
         use_sim_time_arg, publish_tf_arg, loop_hz_arg,
-        jsp, rsp, static_tf, desc_pub, sim, rviz
+        jsp, rsp, static_tf, desc_pub, sim
     ])
