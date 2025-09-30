@@ -22,7 +22,7 @@ class TutorialMotorNode : public rclcpp::Node
 {
 public:
     TutorialMotorNode()
-    : Node("tutorial_mobile_robot_node"),
+    : Node("mobile_robot_node"),
       loop_hz_(100.0),
       publish_tf_(true),
       publish_local_outputs_(true),

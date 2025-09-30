@@ -43,19 +43,19 @@ target_include_directories(tutorial_mobile_robot_core PUBLIC
 ament_target_dependencies(tutorial_mobile_robot_core rclcpp)
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 실행 노드: tutorial_motor_node
+# 실행 노드: mobile_robot_node
 # ─────────────────────────────────────────────────────────────────────────────
-add_executable(tutorial_motor_node
-  src/tutorial_motor_node.cpp
+add_executable(mobile_robot_node
+  src/mobile_robot_node.cpp
 )
-target_include_directories(tutorial_motor_node PUBLIC
+target_include_directories(mobile_robot_node PUBLIC
   $<BUILD_INTERFACE:${PROJ_INCLUDE}>
   $<INSTALL_INTERFACE:include>
 )
-target_link_libraries(tutorial_motor_node
+target_link_libraries(mobile_robot_node
   tutorial_mobile_robot_core
 )
-ament_target_dependencies(tutorial_motor_node
+ament_target_dependencies(mobile_robot_node
   rclcpp
   geometry_msgs
   nav_msgs
@@ -158,7 +158,7 @@ endif()
 # ─────────────────────────────────────────────────────────────────────────────
 install(TARGETS
   tutorial_mobile_robot_core
-  tutorial_motor_node
+  mobile_robot_node
   RUNTIME DESTINATION lib/${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib

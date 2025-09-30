@@ -26,7 +26,7 @@ def generate_launch_description():
         value_type=str
     )
 
-    # joint_state_publisher (있으면 유지)
+    # joint_state_publisher
     jsp = Node(
         package='joint_state_publisher',
         executable='joint_state_publisher',
@@ -45,7 +45,7 @@ def generate_launch_description():
         output='screen'
     )
 
-    # odom -> base_footprint 정적 TF (원하면 유지)
+    # odom -> base_footprint 정적 TF
     static_tf = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
@@ -57,7 +57,7 @@ def generate_launch_description():
         output='screen'
     )
 
-    # ★ robot_description 토픽 퍼블리셔
+    # robot_description 토픽 퍼블리셔
     desc_pub = Node(
         package='tutorial_mobile_robot',
         executable='robot_description_topic_publisher',
@@ -67,7 +67,7 @@ def generate_launch_description():
         output='screen'
     )
 
-    # MuJoCo 시뮬 (유지)
+    # MuJoCo 시뮬
     sim = Node(
         package='tutorial_mobile_robot',
         executable='mujoco_sim_node',
@@ -80,7 +80,7 @@ def generate_launch_description():
         output='screen'
     )
 
-    # RViz2 (이제 Topic을 구독)
+    # RViz2
     rviz = Node(
         package='rviz2',
         executable='rviz2',
