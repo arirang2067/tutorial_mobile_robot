@@ -13,9 +13,9 @@
 #include "tf2_ros/transform_broadcaster.h"
 
 #include "ament_index_cpp/get_package_share_directory.hpp"
-#include "tutorial_ros2_motor/mujoco_sim.hpp"
+#include "tutorial_mobile_robot/mujoco_sim.hpp"
 
-using tutorial_ros2_motor::MjSim;
+using tutorial_mobile_robot::MjSim;
 
 class MujocoSimNode : public rclcpp::Node
 {
@@ -34,7 +34,7 @@ public:
         // MJCF 경로
         std::string mjcf_path = this->declare_parameter<std::string>("mjcf_path", "");
         if (mjcf_path.empty()) {
-            auto share = ament_index_cpp::get_package_share_directory("tutorial_ros2_motor");
+            auto share = ament_index_cpp::get_package_share_directory("tutorial_mobile_robot");
             mjcf_path = share + "/assets/mobile_robot.xml";
         }
 

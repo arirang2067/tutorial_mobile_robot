@@ -5,9 +5,9 @@ from launch_ros.actions import Node
 def generate_launch_description():
     return LaunchDescription([
         Node(
-            package="tutorial_ros2_motor",
+            package="tutorial_mobile_robot",
             executable="tutorial_motor_node",
-            name="tutorial_ros2_motor_node",
+            name="tutorial_mobile_robot_node",
             output="screen",
             parameters=[{
                 # 프레임/루프

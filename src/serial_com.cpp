@@ -1,4 +1,4 @@
-#include "tutorial_ros2_motor/serial_com.hpp"
+#include "tutorial_mobile_robot/serial_com.hpp"
 
 #include <cstring>
 #include <iostream>

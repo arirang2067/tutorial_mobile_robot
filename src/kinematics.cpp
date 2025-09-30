@@ -1,4 +1,4 @@
-#include "tutorial_ros2_motor/kinematics.hpp"
+#include "tutorial_mobile_robot/kinematics.hpp"
 
 namespace {
 constexpr double TWO_PI = 2.0 * M_PI;

@@ -1,9 +1,9 @@
-#include "tutorial_ros2_motor/mujoco_sim.hpp"
+#include "tutorial_mobile_robot/mujoco_sim.hpp"
 #include <cmath>
 #include <stdexcept>
 #include <iostream>
 
-namespace tutorial_ros2_motor {
+namespace tutorial_mobile_robot {
 
 static inline void YawToQuat(double yaw, double& qw, double& qx, double& qy, double& qz)
 {
@@ -156,4 +156,4 @@ std::pair<double,double> MjSim::GetBaseVelocityVW() const
     return {v, w};
 }
 
-} // namespace tutorial_ros2_motor
+} // namespace tutorial_mobile_robot

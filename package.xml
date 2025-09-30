@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="3">
-  <name>tutorial_ros2_motor</name>
+  <name>tutorial_mobile_robot</name>
   <version>0.0.1</version>
   <description>ROS2 Jazzy educational differential-drive node: controller + kinematics</description>
   <maintainer email="arirang2067@hanyang.ac.kr">Chris Chun</maintainer>

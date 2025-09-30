@@ -13,8 +13,8 @@
 #include "geometry_msgs/msg/transform_stamped.hpp"
 #include "geometry_msgs/msg/vector3.hpp"
 
-#include "tutorial_ros2_motor/controller.hpp"
-#include "tutorial_ros2_motor/kinematics.hpp"
+#include "tutorial_mobile_robot/controller.hpp"
+#include "tutorial_mobile_robot/kinematics.hpp"
 
 // 함수: PascalCase, 변수: snake_case
 
@@ -22,7 +22,7 @@ class TutorialMotorNode : public rclcpp::Node
 {
 public:
     TutorialMotorNode()
-    : Node("tutorial_ros2_motor_node"),
+    : Node("tutorial_mobile_robot_node"),
       loop_hz_(100.0),
       publish_tf_(true),
       publish_local_outputs_(true),

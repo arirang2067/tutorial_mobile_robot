@@ -1,4 +1,4 @@
-#include "tutorial_ros2_motor/controller.hpp"
+#include "tutorial_mobile_robot/controller.hpp"
 
 Controller::Controller()
 : Controller(Params{})

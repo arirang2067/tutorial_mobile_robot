@@ -6,7 +6,7 @@ from launch_ros.substitutions import FindPackageShare
 from launch_ros.parameter_descriptions import ParameterValue
 
 def generate_launch_description():
-    pkg_share   = FindPackageShare('tutorial_ros2_motor')
+    pkg_share   = FindPackageShare('tutorial_mobile_robot')
     assets      = PathJoinSubstitution([pkg_share, 'assets'])
     urdf_xacro  = PathJoinSubstitution([assets, 'mobile_robot.urdf.xacro'])
     mjcf        = PathJoinSubstitution([assets, 'mobile_robot.xml'])
@@ -59,7 +59,7 @@ def generate_launch_description():
 
     # ★ robot_description 토픽 퍼블리셔
     desc_pub = Node(
-        package='tutorial_ros2_motor',
+        package='tutorial_mobile_robot',
         executable='robot_description_topic_publisher',
         parameters=[{
             'robot_description': robot_description
@@ -69,7 +69,7 @@ def generate_launch_description():
 
     # MuJoCo 시뮬 (유지)
     sim = Node(
-        package='tutorial_ros2_motor',
+        package='tutorial_mobile_robot',
         executable='mujoco_sim_node',
         parameters=[{
             'mjcf_path': mjcf,
