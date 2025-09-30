@@ -26,15 +26,15 @@
       <geom type="box" size="0.15 0.20 0.05" material="chassis"/>
 
       <!-- 왼쪽 바퀴 (y축 힌지 회전) -->
-      <body name="left_wheel" pos="0  0.21 0.05">
+      <body name="left_wheel" pos="0  0.22325 0.05"> <!-- 0.4465/2 -->
         <joint name="left_wheel_joint" type="hinge" axis="0 1 0" limited="false"/>
-        <geom type="cylinder" size="0.08 0.02" material="wheel"/>
+        <geom type="cylinder" size="0.04 0.065" material="wheel"/>
       </body>
 
       <!-- 오른쪽 바퀴 -->
-      <body name="right_wheel" pos="0 -0.21 0.05">
+      <body name="right_wheel" pos="0 -0.22325 0.05"> <!-- 0.4465/2 -->
         <joint name="right_wheel_joint" type="hinge" axis="0 1 0" limited="false"/>
-        <geom type="cylinder" size="0.08 0.02" material="wheel"/>
+        <geom type="cylinder" size="0.04 0.065" material="wheel"/>
       </body>
     </body>
   </worldbody>

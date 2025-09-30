@@ -41,8 +41,8 @@ public:
         // MuJoCo 초기화
         MjSim::Params sp;
         sp.mjcf_path    = mjcf_path;
-        sp.wheel_radius = this->declare_parameter<double>("wheel_radius", 0.08);
-        sp.wheel_length = this->declare_parameter<double>("wheel_length", 0.42);
+        sp.wheel_radius = this->declare_parameter<double>("wheel_radius", 0.065);
+        sp.wheel_length = this->declare_parameter<double>("wheel_length", 0.4465);
 
         sim_ = std::make_unique<MjSim>(sp);
         if (!sim_->Load()) {

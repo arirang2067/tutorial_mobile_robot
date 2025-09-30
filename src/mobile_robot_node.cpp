@@ -27,7 +27,7 @@ public:
       publish_tf_(true),
       publish_local_outputs_(true),
       controller_(Controller::Params{}),
-      kinematics_(Kinematics::Params{0.08, 0.42, 4.0, 350}),
+      kinematics_(Kinematics::Params{0.065, 0.4465, 4.0, 350}),
       left_wheel_pos_rad_(0.0),
       right_wheel_pos_rad_(0.0),
       last_time_(this->get_clock()->now())
@@ -72,8 +72,8 @@ private:
 
         // Kinematics
         Kinematics::Params kp;
-        kp.wheel_radius = this->declare_parameter<double>("wheel_radius", 0.08);
-        kp.wheel_length = this->declare_parameter<double>("wheel_length", 0.42);
+        kp.wheel_radius = this->declare_parameter<double>("wheel_radius", 0.065);
+        kp.wheel_length = this->declare_parameter<double>("wheel_length", 0.4465);
         kp.gear_ratio   = this->declare_parameter<double>("gear_ratio", 4.0);
         kp.max_rpm      = this->declare_parameter<int>("max_rpm", 350);
         kinematics_.SetParams(kp);

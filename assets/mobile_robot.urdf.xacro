@@ -2,8 +2,8 @@
 <robot name="mobile_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
   <!-- 파라미터 -->
-  <xacro:property name="wheel_radius" value="0.08"/>
-  <xacro:property name="wheel_length" value="0.42"/> <!-- 바퀴 중심 간 거리 -->
+  <xacro:property name="wheel_radius" value="0.065"/> <!-- Ø130mm/2 -->
+  <xacro:property name="wheel_length" value="0.4465"/> <!-- 바퀴 중심 간 거리 -->
   <xacro:property name="base_size_x"  value="0.30"/>
   <xacro:property name="base_size_y"  value="0.40"/>
   <xacro:property name="base_size_z"  value="0.10"/>
