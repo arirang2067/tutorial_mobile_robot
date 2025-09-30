@@ -124,12 +124,12 @@ private:
         }
 
         // 2) (옵션) 이 노드 자체적으로도 정/관절/오돔 퍼블리시
-        if (publish_local_outputs_) {
-            kinematics_.UpdateFromVelocity(cmd.linear, cmd.angular, dt);
-            const auto pose = kinematics_.GetPose();
-            PublishJointStates(cmd, dt);
-            PublishOdomAndTf(pose, now);
-        }
+        // if (publish_local_outputs_) {
+        //     kinematics_.UpdateFromVelocity(cmd.linear, cmd.angular, dt);
+        //     const auto pose = kinematics_.GetPose();
+        //     PublishJointStates(cmd, dt);
+        //     PublishOdomAndTf(pose, now);
+        // }
     }
 
     // ---------- 퍼블리시 ----------
