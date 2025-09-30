@@ -82,6 +82,11 @@ if (MUJOCO_INCLUDE_DIR AND MUJOCO_LIBRARY)
   ament_target_dependencies(mujoco_sim_node
     rclcpp geometry_msgs nav_msgs sensor_msgs tf2_ros ament_index_cpp)
 
+  add_executable(robot_description_topic_publisher src/robot_description_topic_publisher.cpp)
+  ament_target_dependencies(robot_description_topic_publisher rclcpp std_msgs)
+  install(TARGETS robot_description_topic_publisher DESTINATION lib/${PROJECT_NAME})
+
+
   # 런타임에 libmujoco.so를 찾게 하려면(선택) RPATH 또는 LD_LIBRARY_PATH 중 택1
   # 여기서는 RPATH도 설정해둡니다.
   target_link_libraries(mujoco_sim_node ${MUJOCO_LIBRARY})
