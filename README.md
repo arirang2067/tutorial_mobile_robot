@@ -4,4 +4,5 @@
 colcon build --packages-select tutorial_mobile_robot && source install/setup.bash
 ros2 launch tutorial_mobile_robot simulation.launch.py
 ros2 launch tutorial_mobile_robot mobile_robot.launch.py
+ros2 launch tutorial_mobile_robot serial_bridge.launch.py
 ros2 run teleop_twist_keyboard teleop_twist_keyboard

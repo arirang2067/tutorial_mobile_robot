@@ -19,7 +19,7 @@ def generate_launch_description():
     # 단위/스케일/극성
     rpm_scale_arg           = DeclareLaunchArgument('rpm_scale',           default_value='1')     # 보드가 rpm×10이면 10
     min_abs_rpm_cmd_arg     = DeclareLaunchArgument('min_abs_rpm_command', default_value='0.0')   # 너무 작은 값 스냅(예: 5.0)
-    invert_left_arg         = DeclareLaunchArgument('invert_left',         default_value='false')
+    invert_left_arg         = DeclareLaunchArgument('invert_left',         default_value='true')
     invert_right_arg        = DeclareLaunchArgument('invert_right',        default_value='false')
 
     # PID 210 방송 요청 옵션

@@ -94,7 +94,7 @@ public:
     fixed_id_ = static_cast<uint8_t>(declare_parameter<int>("fixed_id", 1));   // 항상 1 또는 0xFE
 
     // 단위/극성
-    invert_left_  = declare_parameter<bool>("invert_left",  false);
+    invert_left_  = declare_parameter<bool>("invert_left",  true);
     invert_right_ = declare_parameter<bool>("invert_right", false);
 
     // 속도 변환: rad/s → rpm(*scale) → int16
