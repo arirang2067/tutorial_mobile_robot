@@ -1,66 +1,121 @@
 # launch/serial_bridge.launch.py
-#
-# 목적: 실제 하드웨어에서 모터 제어용 시리얼 브리지 노드 실행
-#  - /wheel_speeds_cmd 토픽을 받아 시리얼 패킷 전송 (SerialCom 내부 사용)
-#
-# 사용 예:
-#   ros2 launch tutorial_mobile_robot serial_bridge.launch.py
-#   ros2 launch tutorial_mobile_robot serial_bridge.launch.py device:=/dev/ttyUSB1 baudrate:=921600
-#
+
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
-def generate_launch_description():
-    # ── 런치 인자 (필요시 수정)
-    device_arg        = DeclareLaunchArgument('device',        default_value='/dev/ttyUSB0')
-    baudrate_arg      = DeclareLaunchArgument('baudrate',      default_value='115200')
-    pc_id_arg         = DeclareLaunchArgument('pc_id',         default_value='85')   # 0x55
-    mdt_id_arg        = DeclareLaunchArgument('mdt_id',        default_value='170')  # 0xAA
-    mdui_id_arg       = DeclareLaunchArgument('mdui_id',       default_value='171')  # 0xAB
-    left_id_arg       = DeclareLaunchArgument('left_motor_id',  default_value='1')
-    right_id_arg      = DeclareLaunchArgument('right_motor_id', default_value='2')
-    pid_speed_arg     = DeclareLaunchArgument('pid_set_speed', default_value='16')   # 0x10
-    tx_rate_arg       = DeclareLaunchArgument('tx_rate_hz',    default_value='100.0')
-    timeout_arg       = DeclareLaunchArgument('timeout_no_cmd_sec', default_value='0.2')
 
-    # ── 런치 변수
+def generate_launch_description():
+    # ── 런치 인자 선언 ─────────────────────────────────────────────
+    device_arg   = DeclareLaunchArgument('device',   default_value='/dev/ttyUSB0')
+    baudrate_arg = DeclareLaunchArgument('baudrate', default_value='19200')
+
+    # 프레임 헤더
+    rmid_arg     = DeclareLaunchArgument('rmid',     default_value='183')  # MID_MDT
+    pcid_arg     = DeclareLaunchArgument('pcid',     default_value='172')  # MID_PC
+    fixed_id_arg = DeclareLaunchArgument('fixed_id', default_value='1')
+
+    # 단위/스케일/극성
+    rpm_scale_arg       = DeclareLaunchArgument('rpm_scale',           default_value='1')
+    min_abs_rpm_arg     = DeclareLaunchArgument('min_abs_rpm_command', default_value='0.0')
+    invert_left_arg     = DeclareLaunchArgument('invert_left',         default_value='true')
+    invert_right_arg    = DeclareLaunchArgument('invert_right',        default_value='false')
+
+    # 피드백 모드 (브로드캐스트 / 폴링)
+    bc_on_start_arg     = DeclareLaunchArgument('main_data_broadcast_on_start', default_value='true')
+    use_polling_arg     = DeclareLaunchArgument('use_polling_feedback', default_value='true')
+    req_monitor_id_arg  = DeclareLaunchArgument('req_monitor_id', default_value='2')
+    request_hz_arg      = DeclareLaunchArgument('request_hz', default_value='20.0')
+
+    # 오돔/TF
+    base_frame_arg      = DeclareLaunchArgument('base_frame_id', default_value='base_link')
+    odom_frame_arg      = DeclareLaunchArgument('odom_frame_id', default_value='odom')
+    publish_tf_arg      = DeclareLaunchArgument('publish_tf', default_value='true')
+    loop_hz_arg         = DeclareLaunchArgument('loop_hz', default_value='100.0')
+    wheel_radius_arg    = DeclareLaunchArgument('wheel_radius', default_value='0.065')
+    wheel_length_arg    = DeclareLaunchArgument('wheel_length', default_value='0.4465')
+
+    # 조인트 이름
+    left_joint_arg      = DeclareLaunchArgument('left_joint_name',  default_value='left_wheel_joint')
+    right_joint_arg     = DeclareLaunchArgument('right_joint_name', default_value='right_wheel_joint')
+
+    # ── 런치 변수 ─────────────────────────────────────────────
     device        = LaunchConfiguration('device')
     baudrate      = LaunchConfiguration('baudrate')
-    pc_id         = LaunchConfiguration('pc_id')
-    mdt_id        = LaunchConfiguration('mdt_id')
-    mdui_id       = LaunchConfiguration('mdui_id')
-    left_motor_id = LaunchConfiguration('left_motor_id')
-    right_motor_id= LaunchConfiguration('right_motor_id')
-    pid_set_speed = LaunchConfiguration('pid_set_speed')
-    tx_rate_hz    = LaunchConfiguration('tx_rate_hz')
-    timeout_sec   = LaunchConfiguration('timeout_no_cmd_sec')
+    rmid          = LaunchConfiguration('rmid')
+    pcid          = LaunchConfiguration('pcid')
+    fixed_id      = LaunchConfiguration('fixed_id')
+    rpm_scale     = LaunchConfiguration('rpm_scale')
+    min_abs_rpm   = LaunchConfiguration('min_abs_rpm_command')
+    invert_left   = LaunchConfiguration('invert_left')
+    invert_right  = LaunchConfiguration('invert_right')
+    bc_on_start   = LaunchConfiguration('main_data_broadcast_on_start')
+    use_polling   = LaunchConfiguration('use_polling_feedback')
+    req_monitor_id= LaunchConfiguration('req_monitor_id')
+    request_hz    = LaunchConfiguration('request_hz')
+    base_frame    = LaunchConfiguration('base_frame_id')
+    odom_frame    = LaunchConfiguration('odom_frame_id')
+    publish_tf    = LaunchConfiguration('publish_tf')
+    loop_hz       = LaunchConfiguration('loop_hz')
+    wheel_radius  = LaunchConfiguration('wheel_radius')
+    wheel_length  = LaunchConfiguration('wheel_length')
+    left_joint    = LaunchConfiguration('left_joint_name')
+    right_joint   = LaunchConfiguration('right_joint_name')
 
-    # ── 시리얼 브리지 노드
+    # ── 시리얼 브리지 노드 ─────────────────────────────────────
     serial_bridge = Node(
         package='tutorial_mobile_robot',
         executable='serial_bridge_node',
         name='serial_bridge_node',
+        output='screen',
         parameters=[{
+            # 포트/프레임 헤더
             'device': device,
             'baudrate': baudrate,
-            'pc_id': pc_id,
-            'mdt_id': mdt_id,
-            'mdui_id': mdui_id,
-            'left_motor_id': left_motor_id,
-            'right_motor_id': right_motor_id,
-            'pid_set_speed': pid_set_speed,
-            'tx_rate_hz': tx_rate_hz,
-            'timeout_no_cmd_sec': timeout_sec
-        }],
-        output='screen'
+            'rmid': rmid,
+            'pcid': pcid,
+            'fixed_id': fixed_id,
+
+            # 변환/극성
+            'rpm_scale': rpm_scale,
+            'min_abs_rpm_command': min_abs_rpm,
+            'invert_left': invert_left,
+            'invert_right': invert_right,
+
+            # 피드백
+            'main_data_broadcast_on_start': bc_on_start,
+            'use_polling_feedback': use_polling,
+            'req_monitor_id': req_monitor_id,
+            'request_hz': request_hz,
+
+            # 오돔/TF
+            'base_frame_id': base_frame,
+            'odom_frame_id': odom_frame,
+            'publish_tf': publish_tf,
+            'loop_hz': loop_hz,
+            'wheel_radius': wheel_radius,
+            'wheel_length': wheel_length,
+
+            # 조인트 이름
+            'left_joint_name': left_joint,
+            'right_joint_name': right_joint
+        }]
     )
 
     return LaunchDescription([
+        # Declare arguments
         device_arg, baudrate_arg,
-        pc_id_arg, mdt_id_arg, mdui_id_arg,
-        left_id_arg, right_id_arg, pid_speed_arg,
-        tx_rate_arg, timeout_arg,
+        rmid_arg, pcid_arg, fixed_id_arg,
+        rpm_scale_arg, min_abs_rpm_arg,
+        invert_left_arg, invert_right_arg,
+        bc_on_start_arg, use_polling_arg,
+        req_monitor_id_arg, request_hz_arg,
+        base_frame_arg, odom_frame_arg,
+        publish_tf_arg, loop_hz_arg,
+        wheel_radius_arg, wheel_length_arg,
+        left_joint_arg, right_joint_arg,
+
+        # Node
         serial_bridge
     ])
