@@ -152,7 +152,10 @@ std::size_t SerialCom::AvailableBytes()
 std::size_t SerialCom::AvailableBytesUnlocked()
 {
     if (!port_.is_open()) return 0;
+
     int bytes = 0;
+    // ioctl이 드라이버에 따라 0을 주거나 타이밍 이슈를 낳을 수 있어
+    // 참고용으로만 쓰고, 실제 read는 read_some()으로 처리한다.
     if (ioctl(port_.native_handle(), FIONREAD, &bytes) == 0 && bytes > 0) {
         return static_cast<std::size_t>(bytes);
     }
@@ -261,27 +264,42 @@ void SerialCom::FeedByte(uint8_t data, const std::function<void(const Frame&)>& 
 
 void SerialCom::ReadAndParse(const std::function<void(const Frame&)>& on_frame)
 {
-    // 1) 잠깐만 락을 잡고 커널 버퍼에서 한 번에 읽어온다.
-    std::vector<uint8_t> local_bytes;
+    // ★ 핵심: 포트 락은 "읽기" 순간에만 잠깐 잡고,
+    // 파싱(FeedByte)은 락 없이 수행한다 → TX와 RX가 서로 오래 막지 않음.
+    if (!on_frame) return;
+
+    // 1) 우선 잠깐 가용 바이트 확인 (안전)
+    std::size_t hint = 0;
     {
         std::lock_guard<std::mutex> lk(port_mutex_);
         if (!port_.is_open()) return;
-        const std::size_t n_avail = AvailableBytesUnlocked();
-        if (n_avail == 0) return;
-
-        const std::size_t chunk = std::min<std::size_t>(n_avail, kRxBufSize);
-        local_bytes.resize(chunk);
-        boost::system::error_code ec;
-        auto n = boost::asio::read(port_, boost::asio::buffer(local_bytes.data(), local_bytes.size()), ec);
-        if (ec) {
-            std::cerr << "[SerialCom] read failed: " << ec.message() << std::endl;
-            return;
-        }
-        local_bytes.resize(n);
+        hint = AvailableBytesUnlocked();
+    }
+    if (hint == 0) {
+        // 힌트가 0이어도 read_some()은 최소 1바이트면 바로 읽는다.
+        // 너무 자주 불리면 CPU가 바쁠 수 있어 호출주기를 짧게(수 ms) 유지.
     }
 
-    // 2) 락 해제 상태에서 파싱 → TX와 경합 최소화
-    for (uint8_t b : local_bytes) {
-        FeedByte(b, on_frame);
+    // 2) 실제 읽기: read_some()으로 "들어온 만큼"만 가져온다(논블로킹 성향).
+    uint8_t tmp[256];
+    std::size_t n = 0;
+    {
+        std::lock_guard<std::mutex> lk(port_mutex_);
+        if (!port_.is_open()) return;
+
+        boost::system::error_code ec;
+        // read_some은 커널버퍼에 있는 만큼만 즉시 반환(최대 tmp 크기)
+        n = port_.read_some(boost::asio::buffer(tmp, sizeof(tmp)), ec);
+        if (ec) {
+            // EAGAIN 류면 무시
+            return;
+        }
+    }
+
+    if (n == 0) return;
+
+    // 3) 파싱은 락 없이 진행 → TX와 경합 최소화
+    for (std::size_t i = 0; i < n; ++i) {
+        FeedByte(tmp[i], on_frame);
     }
 }
