@@ -85,6 +85,9 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/serial_bridge_node.cpp")
     std_msgs
     geometry_msgs
     sensor_msgs
+    nav_msgs
+    tf2
+    tf2_ros
   )
   install(TARGETS serial_bridge_node
     RUNTIME DESTINATION lib/${PROJECT_NAME}
