@@ -39,11 +39,9 @@ class TutorialMotorNode : public rclcpp::Node
 public:
     explicit TutorialMotorNode(const rclcpp::NodeOptions& options = rclcpp::NodeOptions())
     : Node("mobile_robot_node", options),
-      loop_hz_(100.0),
-      publish_tf_(true),
-      publish_local_outputs_(true),
-      controller_(Controller::Params{}),
-      kinematics_(Kinematics::Params{}),
+      loop_hz_(0.0),
+      publish_tf_(false),
+      publish_local_outputs_(false),
       left_wheel_pos_rad_(0.0),
       right_wheel_pos_rad_(0.0),
       last_time_(this->get_clock()->now())
@@ -143,13 +141,13 @@ private:
             wheel_cmd_pub_->publish(v3);
         }
 
-        // 2) (옵션) 자체 퍼블리시 — 필요 시 주석 해제
-        // if (publish_local_outputs_) {
-        //     kinematics_.UpdateFromVelocity(cmd.linear, cmd.angular, dt);
-        //     const auto pose = kinematics_.GetPose();
-        //     PublishJointStates(cmd, dt);
-        //     PublishOdomAndTf(pose, now);
-        // }
+        // 2) (옵션) 자체 퍼블리시
+        if (publish_local_outputs_) {
+            kinematics_.UpdateFromVelocity(cmd.linear, cmd.angular, dt);
+            const auto pose = kinematics_.GetPose();
+            PublishJointStates(cmd, dt);
+            PublishOdomAndTf(pose, now);
+        }
     }
 
     // ---------- 퍼블리시 유틸 ----------
