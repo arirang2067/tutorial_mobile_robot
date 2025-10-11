@@ -9,23 +9,23 @@ struct Controller
     struct Params
     {
         // step 스무딩 파라미터
-        double bound_cmd_speed       = 0.15; // [m/s] 목표와 현재의 허용 오차(선속도)
-        double add_cmd_speed         = 0.03; // [m/s] tick당 선속도 증분
-        double bound_cmd_ang_speed   = 0.30; // [rad/s]
-        double add_cmd_ang_speed     = 0.06; // [rad/s]
+        double bound_cmd_speed;         // [m/s] 목표와 현재의 허용 오차(선속도)
+        double add_cmd_speed;           // [m/s] tick당 선속도 증분
+        double bound_cmd_ang_speed;     // [rad/s]
+        double add_cmd_ang_speed;       // [rad/s]
 
         // rate limit(가속도 제한) 파라미터
-        double max_linear_accel      = 0.6;  // [m/s^2]
-        double max_angular_accel     = 1.5;  // [rad/s^2]
+        double max_linear_accel;        // [m/s^2]
+        double max_angular_accel;       // [rad/s^2]
 
         // 모드/필터/리미트
-        bool   use_rate_limit        = false; // false: step, true: accel limit
-        double deadzone_linear       = 0.03;  // |v|<deadzone -> 0
-        double deadzone_angular      = 0.03;  // |w|<deadzone -> 0
-        double lowpass_alpha_linear  = 0.0;   // 0~1 (0=off), y+=a(u-y)
-        double lowpass_alpha_angular = 0.0;
-        double limit_linear_abs      = 1.5;   // [m/s]
-        double limit_angular_abs     = 3.0;   // [rad/s]
+        bool   use_rate_limit;          // false: step, true: accel limit
+        double deadzone_linear;         // |v|<deadzone -> 0
+        double deadzone_angular;        // |w|<deadzone -> 0
+        double lowpass_alpha_linear;    // 0~1 (0=off), y+=a(u-y)
+        double lowpass_alpha_angular;
+        double limit_linear_abs;        // [m/s]
+        double limit_angular_abs;       // [rad/s]
     };
 
     struct Command

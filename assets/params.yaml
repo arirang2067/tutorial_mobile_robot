@@ -1,0 +1,32 @@
+# config/params.yaml
+mobile_robot_node:                  # ← 반드시 노드 이름과 동일
+  ros__parameters:
+    # Frames / loop / outputs
+    base_frame_id: "base_link"
+    odom_frame_id: "odom"
+    left_joint_name: "wheel_left_joint"
+    right_joint_name: "wheel_right_joint"
+    loop_hz: 200.0                  # double
+    publish_tf: true                # bool
+    publish_local_outputs: true     # bool
+
+    # Kinematics
+    wheel_radius: 0.065             # double
+    wheel_length: 0.4465            # double
+    gear_ratio: 1.0                 # double
+    max_rpm: 400                    # int
+
+    # Controller
+    use_rate_limit: false           # bool
+    bound_cmd_speed: 0.15           # double
+    add_cmd_speed: 0.03             # double
+    bound_cmd_ang_speed: 0.30       # double
+    add_cmd_ang_speed: 0.06         # double
+    max_linear_accel: 0.6           # double
+    max_angular_accel: 1.5          # double
+    deadzone_linear: 0.03           # double
+    deadzone_angular: 0.03          # double
+    lowpass_alpha_linear: 0.0       # double
+    lowpass_alpha_angular: 0.0      # double
+    limit_linear_abs: 1.5           # double
+    limit_angular_abs: 3.0          # double
