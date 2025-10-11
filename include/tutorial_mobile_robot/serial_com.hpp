@@ -16,11 +16,11 @@ public:
     static constexpr size_t   kRxBufSize    = 256;    // 1프레임 여유
 
     struct Params {
-        std::string device{"/dev/ttyUSB0"};
-        unsigned int baudrate{19200};
-        uint8_t pc_id{0xAC};    // MID_PC = 172
-        uint8_t mdt_id{0xB7};   // 183
-        uint8_t mdui_id{0xB8};  // 184
+        std::string device{""};
+        unsigned int baudrate{0};
+        uint8_t pc_id{0};    // MID_PC = 172
+        uint8_t mdt_id{0};   // 183
+        uint8_t mdui_id{0};  // 184
         std::vector<uint8_t> allowed_ids{1, kIdAll};
     };
 
