@@ -51,24 +51,24 @@ defaults:
     #   - HW는 포트/ID/극성처럼 설비에 붙은 값 → 한번 정하면 잘 안 바뀜
     #   - IO는 전송/폴링 주기처럼 운용 정책 → 상황에 따라 변경
     serial_hw: &serial_hw
-      device: "/dev/ttyUSB0"   # [path] 시리얼 포트
-      baudrate: 19200          # [baud]
-      rmid: 183                # [proto] MID_MDT
-      pcid: 172                # [proto] MID_PC
-      fixed_id: 1              # [proto] 대상 구동기 ID
-      invert_left: true        # [bool] 좌 모터 극성 보정
-      invert_right: false      # [bool] 우 모터 극성 보정
-      rpm_scale: 1             # [ratio] 기기 스케일(없으면 1)
-      min_abs_rpm_command: 0.0 # [rpm] 저속 보정(0=off)
+      device: "/dev/ttyUSB0"   # [path] 연결된 시리얼 장치 경로(플러그 위치에 따라 /dev/ttyUSB* /dev/ttyACM* 등)
+      baudrate: 19200          # [baud] 보드와 합의된 전송 속도. 잘못 설정 시 통신 불능
+      rmid: 183                # [proto] 원격(모터 드라이브) 장치 ID(MID_MDT). 패킷 대상 구분용.
+      pcid: 172                # [proto] 로컬(PC) 장치 ID(MID_PC). 패킷 출발지 구분용.
+      fixed_id: 1              # [proto] 실제 제어 대상 모듈 ID(1~n). 0xFE(=ID_ALL)은 전체 브로드캐스트.
+      invert_left: true        # [bool] 좌 모터 회전 방향 뒤집기(true면 명령/피드백 부호 반전).
+      invert_right: false      # [bool] 우 모터 회전 방향 뒤집기.
+      rpm_scale: 1             # [ratio] 펌웨어가 사용하는 rpm 스케일 팩터(펌웨어가 0.1rpm 단위면 10 등).
+      min_abs_rpm_command: 0.0 # [rpm] 아주 작은 명령을 무시하지 않게 최소 절대 rpm 강제(스틱 데드존 보정).
 
     serial_io: &serial_io
-      main_data_broadcast_on_start: true
-      use_polling_feedback: false
-      req_monitor_id: 2
-      request_hz: 20.0
-      tx_rate_hz: 50.0
-      odom_use_cmd_if_no_rx: true
-      rx_stale_sec: 0.3
+      main_data_broadcast_on_start: true # [bool] 시작 시 보드에 “주요 데이터 브로드캐스트 ON” 명령 전송.
+      use_polling_feedback: false        # [bool] true면 주기적으로 요청 패킷을 보내 폴링 방식으로 피드백 수집.
+      req_monitor_id: 2                  # [proto] 폴링 시 요청할 모니터 데이터 ID(보드 펌웨어 스펙에 따름).
+      request_hz: 20.0                   # [Hz] 폴링 주기. use_polling_feedback=true일 때만 사용.
+      tx_rate_hz: 50.0                   # [Hz] 속도 명령 패킷 송신 상한(너무 높으면 보드/버스에 부하, 너무 낮으면 응답성 저하)
+      odom_use_cmd_if_no_rx: true        # [bool] 피드백(RX)이 일정 시간 끊기면, 보낸 명령(CMD)으로 오돔을 임시 적분.
+      rx_stale_sec: 0.3                  # [s] “수신 끊김” 판단 임계시간. 이 시간 이상 RX 없으면 CMD 폴백 사용.
 
 # ─────────────────────────────────────────────────────────────────────────────
 # mobile_robot_node (메인 제어 노드)
