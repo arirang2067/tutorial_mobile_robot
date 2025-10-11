@@ -11,8 +11,8 @@ struct Kinematics
     {
         double wheel_radius = 0.065;   // Ø130mm [m]
         double wheel_length = 0.4465;  // 바퀴 중심간 거리 [m]
-        double gear_ratio   = 4.0;  // 감속비
-        int    max_rpm      = 350;  // 모터 최대 rpm
+        double gear_ratio   = 1.0;  // 감속비
+        int    max_rpm      = 400;  // 모터 최대 rpm
     };
 
     struct Pose
