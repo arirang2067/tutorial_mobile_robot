@@ -1,32 +1,96 @@
 # config/params.yaml
-mobile_robot_node:                  # ← 반드시 노드 이름과 동일
+# ─────────────────────────────────────────────────────────────────────────────
+# 공통 블록(앵커): 프레임 / 차체 기하 / 컨트롤 튜닝 — 모든 노드가 공유
+#   ※ 중요: 앵커는 반드시 어떤 노드의 ros__parameters 내부에 정의해야
+#           rcl 파서가 오류 없이 읽을 수 있음 → defaults 노드에 정의
+# ─────────────────────────────────────────────────────────────────────────────
+defaults:
   ros__parameters:
-    # Frames / loop / outputs
-    base_frame_id: "base_link"
-    odom_frame_id: "odom"
-    left_joint_name: "wheel_left_joint"
-    right_joint_name: "wheel_right_joint"
-    loop_hz: 200.0                  # double
-    publish_tf: true                # bool
-    publish_local_outputs: true     # bool
+    # ───────── Frames (공통) ─────────
+    common_frames: &common_frames
+      base_frame_id: "base_link"            # [frame_id]
+      odom_frame_id: "odom"                 # [frame_id]
+      left_joint_name: "wheel_left_joint"   # [joint name]
+      right_joint_name: "wheel_right_joint" # [joint name]
 
-    # Kinematics
-    wheel_radius: 0.065             # double
-    wheel_length: 0.4465            # double
-    gear_ratio: 1.0                 # double
-    max_rpm: 400                    # int
+    # ───────── Kinematics / Geometry (공통) ─────────
+    common_geom: &common_geom
+      wheel_radius: 0.065        # [m] 바퀴 반지름(접지 유효 반지름). Ø130mm→0.065
+      wheel_length: 0.4465       # [m] 좌/우 휠 중심 간 거리(트레드)
+      gear_ratio: 1.0            # [ratio] 휠축 기준(직결=1.0). 모터↔휠 환산에 사용
+      max_rpm: 400               # [rpm] 휠(또는 등가) 최고 회전수(검증/로그용)
 
-    # Controller
-    use_rate_limit: false           # bool
-    bound_cmd_speed: 0.15           # double
-    add_cmd_speed: 0.03             # double
-    bound_cmd_ang_speed: 0.30       # double
-    add_cmd_ang_speed: 0.06         # double
-    max_linear_accel: 0.6           # double
-    max_angular_accel: 1.5          # double
-    deadzone_linear: 0.03           # double
-    deadzone_angular: 0.03          # double
-    lowpass_alpha_linear: 0.0       # double
-    lowpass_alpha_angular: 0.0      # double
-    limit_linear_abs: 1.5           # double
-    limit_angular_abs: 3.0          # double
+    # ───────── Controller (공통) ─────────
+    common_ctrl: &common_ctrl
+      use_rate_limit: false       # [bool] true: 가속도 제한, false: step 스무딩
+      bound_cmd_speed: 0.15       # [m/s] step: 목표-현재 허용 오차(선속도)
+      add_cmd_speed: 0.03         # [m/s/tick] step: 증분(선속도)
+      bound_cmd_ang_speed: 0.30   # [rad/s] step: 허용 오차(각속도)
+      add_cmd_ang_speed: 0.06     # [rad/s/tick] step: 증분(각속도)
+      max_linear_accel: 0.6       # [m/s^2] rate limit: 선가속도 상한
+      max_angular_accel: 1.5      # [rad/s^2] rate limit: 각가속도 상한
+      deadzone_linear: 0.03       # [m/s] |v|<값→0
+      deadzone_angular: 0.03      # [rad/s] |ω|<값→0
+      lowpass_alpha_linear: 0.0   # [—] 1차 LPF 계수(0~1). 0=off
+      lowpass_alpha_angular: 0.0  # [—] 1차 LPF 계수(0~1). 0=off
+      limit_linear_abs: 1.5       # [m/s] 최종 선속도 절대 상한
+      limit_angular_abs: 3.0      # [rad/s] 최종 각속도 절대 상한
+
+    # ───────── 프로파일(시뮬/실기에서 바뀌는 **행동 파라미터**) ─────────
+    profile_sim: &profile_sim
+      loop_hz: 200.0               # [Hz] 시뮬 루프
+      publish_tf: true             # [bool]
+      publish_local_outputs: false # [bool] 시뮬에서는 보통 false (중복 퍼블리시 방지)
+
+    profile_real: &profile_real
+      loop_hz: 100.0               # [Hz] 실기 루프
+      publish_tf: true
+      publish_local_outputs: true
+
+    # ───────── 시리얼(하드웨어/IO 파라미터를 별도 분리) ─────────
+    #   - HW는 포트/ID/극성처럼 설비에 붙은 값 → 한번 정하면 잘 안 바뀜
+    #   - IO는 전송/폴링 주기처럼 운용 정책 → 상황에 따라 변경
+    serial_hw: &serial_hw
+      device: "/dev/ttyUSB0"   # [path] 시리얼 포트
+      baudrate: 19200          # [baud]
+      rmid: 183                # [proto] MID_MDT
+      pcid: 172                # [proto] MID_PC
+      fixed_id: 1              # [proto] 대상 구동기 ID
+      invert_left: true        # [bool] 좌 모터 극성 보정
+      invert_right: false      # [bool] 우 모터 극성 보정
+      rpm_scale: 1             # [ratio] 기기 스케일(없으면 1)
+      min_abs_rpm_command: 0.0 # [rpm] 저속 보정(0=off)
+
+    serial_io: &serial_io
+      main_data_broadcast_on_start: true
+      use_polling_feedback: false
+      req_monitor_id: 2
+      request_hz: 20.0
+      tx_rate_hz: 50.0
+      odom_use_cmd_if_no_rx: true
+      rx_stale_sec: 0.3
+
+# ─────────────────────────────────────────────────────────────────────────────
+# mobile_robot_node (메인 제어 노드)
+# ─────────────────────────────────────────────────────────────────────────────
+mobile_robot_node:
+  ros__parameters:
+    <<: [*common_frames, *common_geom, *common_ctrl, *profile_sim]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# mujoco_sim_node (시뮬레이터 노드)
+#   - use_sim_time은 런치 인자로 받는 편이 좋아서 여기선 생략 권장
+#   - mjcf_path는 런치에서 구성(패키지 상대 경로)하거나 빈 문자열이면 노드가 기본값 사용
+# ─────────────────────────────────────────────────────────────────────────────
+mujoco_sim_node:
+  ros__parameters:
+    <<: [*common_frames, *common_geom, *profile_sim]
+    mjcf_path: ""  # "" → 노드가 패키지의 assets/mobile_robot.xml 기본값 사용
+
+# ─────────────────────────────────────────────────────────────────────────────
+# serial_bridge_node (실기 브리지 노드)
+#   - 실기 프로파일 + 시리얼 HW/IO 블록을 합쳐서 사용
+# ─────────────────────────────────────────────────────────────────────────────
+serial_bridge_node:
+  ros__parameters:
+    <<: [*common_frames, *common_geom, *profile_real, *serial_hw, *serial_io]

@@ -3,6 +3,7 @@
 #include <chrono>
 #include <cmath>
 #include <vector>
+#include <stdexcept>
 
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/vector3.hpp"
@@ -17,32 +18,55 @@
 
 using tutorial_mobile_robot::MjSim;
 
+// 함수: PascalCase, 변수: snake_case
+namespace {
+// 필수 파라미터 강제 헬퍼: 없으면 즉시 예외
+template<typename T>
+T GetParam(const rclcpp::Node& node, const std::string& name)
+{
+    T value{};
+    if (!node.get_parameter(name, value)) {
+        RCLCPP_FATAL(node.get_logger(),
+                     "Required parameter '%s' is not set. Provide it via YAML or launch parameters.",
+                     name.c_str());
+        throw std::runtime_error("missing required parameter: " + name);
+    }
+    return value;
+}
+} // namespace
+
 class MujocoSimNode : public rclcpp::Node
 {
 public:
-    MujocoSimNode()
-    : Node("mujoco_diff_drive_sim")
+    explicit MujocoSimNode(const rclcpp::NodeOptions& options =
+                               rclcpp::NodeOptions().automatically_declare_parameters_from_overrides(true))
+    : Node("mujoco_sim_node", options)
     {
-        // 파라미터
-        base_frame_id_    = this->declare_parameter<std::string>("base_frame_id", "base_link");
-        odom_frame_id_    = this->declare_parameter<std::string>("odom_frame_id", "odom");
-        left_joint_name_  = this->declare_parameter<std::string>("left_joint_name",  "wheel_left_joint");
-        right_joint_name_ = this->declare_parameter<std::string>("right_joint_name", "wheel_right_joint");
-        loop_hz_          = this->declare_parameter<double>("loop_hz", 200.0);
-        publish_tf_       = this->declare_parameter<bool>("publish_tf", true);
+        // ── 필수 파라미터(전부 YAML/런치로만 주입) ─────────────────────────
+        base_frame_id_    = GetParam<std::string>(*this, "base_frame_id");
+        odom_frame_id_    = GetParam<std::string>(*this, "odom_frame_id");
+        left_joint_name_  = GetParam<std::string>(*this, "left_joint_name");
+        right_joint_name_ = GetParam<std::string>(*this, "right_joint_name");
+        loop_hz_          = GetParam<double>(*this, "loop_hz");
+        publish_tf_       = GetParam<bool>(*this, "publish_tf");
 
-        // MJCF 경로
-        std::string mjcf_path = this->declare_parameter<std::string>("mjcf_path", "");
+        // MuJoCo/기하
+        const double wheel_radius = GetParam<double>(*this, "wheel_radius");
+        const double wheel_length = GetParam<double>(*this, "wheel_length");
+
+        // ── MJCF 경로(선택 정책: 비어 있으면 패키지 기본으로 대체) ─────────
+        std::string mjcf_path;
+        (void)this->get_parameter("mjcf_path", mjcf_path); // 미설정/빈 문자열이면 아래에서 기본 경로로 대체
         if (mjcf_path.empty()) {
-            auto share = ament_index_cpp::get_package_share_directory("tutorial_mobile_robot");
+            const auto share = ament_index_cpp::get_package_share_directory("tutorial_mobile_robot");
             mjcf_path = share + "/assets/mobile_robot.xml";
         }
 
-        // MuJoCo 초기화
+        // ── MuJoCo 초기화 ──────────────────────────────────────────────
         MjSim::Params sp;
         sp.mjcf_path    = mjcf_path;
-        sp.wheel_radius = this->declare_parameter<double>("wheel_radius", 0.065);
-        sp.wheel_length = this->declare_parameter<double>("wheel_length", 0.4465);
+        sp.wheel_radius = wheel_radius;
+        sp.wheel_length = wheel_length;
 
         sim_ = std::make_unique<MjSim>(sp);
         if (!sim_->Load()) {
@@ -50,6 +74,7 @@ public:
             throw std::runtime_error("MJCF load failed");
         }
 
+        // ── ROS I/F ────────────────────────────────────────────────────
         auto qos = rclcpp::QoS(rclcpp::KeepLast(10));
         odom_pub_  = this->create_publisher<nav_msgs::msg::Odometry>("/odom", qos);
         joint_pub_ = this->create_publisher<sensor_msgs::msg::JointState>("/joint_states", qos);
@@ -57,7 +82,6 @@ public:
             tf_broadcaster_ = std::make_shared<tf2_ros::TransformBroadcaster>(this);
         }
 
-        // ▲ 여기! 외부(컨트롤러/키네매틱스)에서 온 휠 각속도 명령 구독
         wheel_cmd_sub_ = this->create_subscription<geometry_msgs::msg::Vector3>(
             "/wheel_speeds_cmd", qos,
             std::bind(&MujocoSimNode::HandleWheelCmd, this, std::placeholders::_1));
@@ -69,7 +93,9 @@ public:
             std::chrono::duration_cast<std::chrono::milliseconds>(period),
             std::bind(&MujocoSimNode::RunTimer, this));
 
-        RCLCPP_INFO(this->get_logger(), "MuJoCo sim ready. MJCF: %s", mjcf_path.c_str());
+        RCLCPP_INFO(this->get_logger(),
+                    "MuJoCo sim ready. MJCF: %s (wheel_radius=%.6f, wheel_length=%.6f, loop_hz=%.1f, publish_tf=%s)",
+                    mjcf_path.c_str(), wheel_radius, wheel_length, loop_hz_, publish_tf_ ? "true" : "false");
     }
 
 private:
@@ -110,7 +136,6 @@ private:
         odom.header.stamp = now;
         odom.header.frame_id = odom_frame_id_;
         odom.child_frame_id  = base_frame_id_;
-
         odom.pose.pose.position.x = x;
         odom.pose.pose.position.y = y;
         odom.pose.pose.position.z = 0.0;
@@ -162,7 +187,10 @@ private:
 int main(int argc, char** argv)
 {
     rclcpp::init(argc, argv);
-    auto node = std::make_shared<MujocoSimNode>();
+    // YAML/런치에서 온 파라미터만 자동 선언 → 코드에서는 get_parameter만 사용
+    rclcpp::NodeOptions opts;
+    opts.automatically_declare_parameters_from_overrides(true);
+    auto node = std::make_shared<MujocoSimNode>(opts);
     rclcpp::spin(node);
     rclcpp::shutdown();
     return 0;

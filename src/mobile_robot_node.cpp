@@ -22,7 +22,7 @@
 namespace {
 // 필수 파라미터 강제 헬퍼: 없으면 즉시 예외
 template<typename T>
-T GetRequiredParam(const rclcpp::Node& node, const std::string& name)
+T GetParam(const rclcpp::Node& node, const std::string& name)
 {
     T value{};
     if (!node.get_parameter(name, value)) {
@@ -77,37 +77,37 @@ private:
     void LoadParamsOnlyFromOverrides()
     {
         // Frames / loop / outputs
-        base_frame_id_        = GetRequiredParam<std::string>(*this, "base_frame_id");
-        odom_frame_id_        = GetRequiredParam<std::string>(*this, "odom_frame_id");
-        left_joint_name_      = GetRequiredParam<std::string>(*this, "left_joint_name");
-        right_joint_name_     = GetRequiredParam<std::string>(*this, "right_joint_name");
-        loop_hz_              = GetRequiredParam<double>(*this, "loop_hz");
-        publish_tf_           = GetRequiredParam<bool>(*this, "publish_tf");
-        publish_local_outputs_= GetRequiredParam<bool>(*this, "publish_local_outputs");
+        base_frame_id_        = GetParam<std::string>(*this, "base_frame_id");
+        odom_frame_id_        = GetParam<std::string>(*this, "odom_frame_id");
+        left_joint_name_      = GetParam<std::string>(*this, "left_joint_name");
+        right_joint_name_     = GetParam<std::string>(*this, "right_joint_name");
+        loop_hz_              = GetParam<double>(*this, "loop_hz");
+        publish_tf_           = GetParam<bool>(*this, "publish_tf");
+        publish_local_outputs_= GetParam<bool>(*this, "publish_local_outputs");
 
         // Kinematics
         Kinematics::Params kp;
-        kp.wheel_radius = GetRequiredParam<double>(*this, "wheel_radius");
-        kp.wheel_length = GetRequiredParam<double>(*this, "wheel_length");
-        kp.gear_ratio   = GetRequiredParam<double>(*this, "gear_ratio");
-        kp.max_rpm      = GetRequiredParam<int>(*this, "max_rpm");
+        kp.wheel_radius = GetParam<double>(*this, "wheel_radius");
+        kp.wheel_length = GetParam<double>(*this, "wheel_length");
+        kp.gear_ratio   = GetParam<double>(*this, "gear_ratio");
+        kp.max_rpm      = GetParam<int>(*this, "max_rpm");
         kinematics_.SetParams(kp);
 
         // Controller
         Controller::Params cp;
-        cp.use_rate_limit        = GetRequiredParam<bool>(*this, "use_rate_limit");
-        cp.bound_cmd_speed       = GetRequiredParam<double>(*this, "bound_cmd_speed");
-        cp.add_cmd_speed         = GetRequiredParam<double>(*this, "add_cmd_speed");
-        cp.bound_cmd_ang_speed   = GetRequiredParam<double>(*this, "bound_cmd_ang_speed");
-        cp.add_cmd_ang_speed     = GetRequiredParam<double>(*this, "add_cmd_ang_speed");
-        cp.max_linear_accel      = GetRequiredParam<double>(*this, "max_linear_accel");
-        cp.max_angular_accel     = GetRequiredParam<double>(*this, "max_angular_accel");
-        cp.deadzone_linear       = GetRequiredParam<double>(*this, "deadzone_linear");
-        cp.deadzone_angular      = GetRequiredParam<double>(*this, "deadzone_angular");
-        cp.lowpass_alpha_linear  = GetRequiredParam<double>(*this, "lowpass_alpha_linear");
-        cp.lowpass_alpha_angular = GetRequiredParam<double>(*this, "lowpass_alpha_angular");
-        cp.limit_linear_abs      = GetRequiredParam<double>(*this, "limit_linear_abs");
-        cp.limit_angular_abs     = GetRequiredParam<double>(*this, "limit_angular_abs");
+        cp.use_rate_limit        = GetParam<bool>(*this, "use_rate_limit");
+        cp.bound_cmd_speed       = GetParam<double>(*this, "bound_cmd_speed");
+        cp.add_cmd_speed         = GetParam<double>(*this, "add_cmd_speed");
+        cp.bound_cmd_ang_speed   = GetParam<double>(*this, "bound_cmd_ang_speed");
+        cp.add_cmd_ang_speed     = GetParam<double>(*this, "add_cmd_ang_speed");
+        cp.max_linear_accel      = GetParam<double>(*this, "max_linear_accel");
+        cp.max_angular_accel     = GetParam<double>(*this, "max_angular_accel");
+        cp.deadzone_linear       = GetParam<double>(*this, "deadzone_linear");
+        cp.deadzone_angular      = GetParam<double>(*this, "deadzone_angular");
+        cp.lowpass_alpha_linear  = GetParam<double>(*this, "lowpass_alpha_linear");
+        cp.lowpass_alpha_angular = GetParam<double>(*this, "lowpass_alpha_angular");
+        cp.limit_linear_abs      = GetParam<double>(*this, "limit_linear_abs");
+        cp.limit_angular_abs     = GetParam<double>(*this, "limit_angular_abs");
         controller_.SetParams(cp);
 
         RCLCPP_INFO(this->get_logger(),
