@@ -12,8 +12,8 @@ class MjSim {
 public:
     struct Params {
         std::string mjcf_path;   // MJCF 파일 경로
-        double wheel_radius = 0.065;    // [m]
-        double wheel_length = 0.4465;   // [m] 바퀴 중심간 거리
+        double wheel_radius;    // [m]
+        double wheel_length;   // [m] 바퀴 중심간 거리
     };
 
     explicit MjSim(const Params& params);

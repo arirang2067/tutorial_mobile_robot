@@ -1,39 +1,37 @@
+# launch/mobile_robot.launch.py
 from launch import LaunchDescription
+from launch.actions import OpaqueFunction
 from launch.substitutions import PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
+import yaml  # 없으면: sudo apt-get install -y python3-yaml
 
 def generate_launch_description():
-    pkg_share = FindPackageShare('tutorial_mobile_robot')
-    assets    = PathJoinSubstitution([pkg_share, 'assets'])
-    rviz_cfg  = PathJoinSubstitution([assets, 'mobile_robot.rviz'])
+    return LaunchDescription([
+        OpaqueFunction(function=_launch_setup)
+    ])
+
+def _launch_setup(context, *args, **kwargs):
+    pkg_share   = FindPackageShare('tutorial_mobile_robot')
+    assets      = PathJoinSubstitution([pkg_share, 'assets'])
+    rviz_cfg    = PathJoinSubstitution([assets, 'mobile_robot.rviz'])
+    params_yaml = PathJoinSubstitution([assets, 'params.yaml'])
+
+    params_path = params_yaml.perform(context)
+    with open(params_path, 'r') as f:
+        y = yaml.safe_load(f) or {}
+
+    mobile_params = (y.get('mobile_robot_node') or {}).get('ros__parameters') or {}
+    if not mobile_params:
+        raise RuntimeError(f"[mobile_robot.launch] '{params_path}'에 "
+                           f"mobile_robot_node.ros__parameters가 없습니다.")
 
     mobile_node = Node(
         package="tutorial_mobile_robot",
         executable="mobile_robot_node",
         name="mobile_robot_node",
         output="screen",
-        parameters=[{
-            "loop_hz": 100.0,
-            "publish_tf": True,
-            "base_frame_id": "base_link",
-            "odom_frame_id": "odom",
-            "left_joint_name": "wheel_left_joint",
-            "right_joint_name": "wheel_right_joint",
-            "wheel_radius": 0.08,
-            "wheel_length": 0.42,
-            "gear_ratio": 4.0,
-            "max_rpm": 350,
-            "use_rate_limit": False,
-            "bound_cmd_speed": 0.15,
-            "add_cmd_speed": 0.03,
-            "bound_cmd_ang_speed": 0.30,
-            "add_cmd_ang_speed": 0.06,
-            "deadzone_linear": 0.03,
-            "deadzone_angular": 0.03,
-            "lowpass_alpha_linear": 0.0,
-            "lowpass_alpha_angular": 0.0
-        }]
+        parameters=[mobile_params],
     )
 
     rviz = Node(
@@ -44,7 +42,4 @@ def generate_launch_description():
         output='screen'
     )
 
-    return LaunchDescription([
-        mobile_node,
-        rviz
-    ])
+    return [mobile_node, rviz]

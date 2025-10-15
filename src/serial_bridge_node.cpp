@@ -6,6 +6,7 @@
 #include <cstring>
 #include <algorithm>
 #include <chrono>
+#include <stdexcept>
 
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/vector3.hpp"
@@ -68,19 +69,48 @@ struct PntMainData {
 #pragma pack(pop)
 
 // ─────────────────────────────────────────────────────────────────────────────
+// 파라미터 강제 헬퍼: 없으면 즉시 예외
+namespace {
+template<typename T>
+T GetParam(const rclcpp::Node& node, const std::string& name) {
+  T v{};
+  if (!node.get_parameter(name, v)) {
+    throw std::runtime_error("Required parameter '" + name + "' is not set. Supply via YAML/launch.");
+  }
+  return v;
+}
+
+// 정수로 받고 범위 확인 후 작은 타입으로 캐스팅 (예: uint8_t)
+template<typename SmallIntT>
+SmallIntT GetParamUint8(const rclcpp::Node& node, const std::string& name) {
+  static_assert(std::is_same<SmallIntT, uint8_t>::value, "SmallIntT must be uint8_t");
+  int tmp{};
+  if (!node.get_parameter(name, tmp)) {
+    throw std::runtime_error("Required parameter '" + name + "' is not set. Supply via YAML/launch.");
+  }
+  if (tmp < 0 || tmp > 255) {
+    throw std::runtime_error("Parameter '" + name + "' must be in [0,255], got " + std::to_string(tmp));
+  }
+  return static_cast<uint8_t>(tmp);
+}
+} // namespace
+
 class SerialBridgeNode : public rclcpp::Node
 {
 public:
   SerialBridgeNode()
-  : Node("serial_bridge_node")
+  : Node(
+      "serial_bridge_node",
+      rclcpp::NodeOptions().automatically_declare_parameters_from_overrides(true)
+    )
   {
-    LoadParams();
+    LoadParams();      // ← declare 없이 필수 파라미터 강제 로드
     ConfigureSerial();
     SetupRos();
 
-    last_time_ = now();
-    last_rx_time_ = now();
-    last_cmd_time_ = now();
+    last_time_    = this->get_clock()->now();
+    last_rx_time_ = this->get_clock()->now();
+    last_cmd_time_= this->get_clock()->now();
   }
 
 private:
@@ -88,38 +118,42 @@ private:
   void LoadParams()
   {
     // 포트/프레임
-    device_   = declare_parameter<std::string>("device", "/dev/ttyUSB0");
-    baudrate_ = declare_parameter<int>("baudrate", 19200);
-    rmid_     = static_cast<uint8_t>(declare_parameter<int>("rmid", MID_MDT));
-    pcid_     = static_cast<uint8_t>(declare_parameter<int>("pcid", MID_PC));
-    fixed_id_ = static_cast<uint8_t>(declare_parameter<int>("fixed_id", 1));
+    device_   = GetParam<std::string>(*this, "device");
+    baudrate_ = GetParam<int>(*this, "baudrate");
+    rmid_     = GetParamUint8<uint8_t>(*this, "rmid");
+    pcid_     = GetParamUint8<uint8_t>(*this, "pcid");
+    fixed_id_ = GetParamUint8<uint8_t>(*this, "fixed_id");
 
     // 변환/극성
-    invert_left_   = declare_parameter<bool>("invert_left",  true);
-    invert_right_  = declare_parameter<bool>("invert_right", false);
-    rpm_scale_     = declare_parameter<int>("rpm_scale", 1);
-    min_abs_rpm_command_ = declare_parameter<double>("min_abs_rpm_command", 0.0);
+    invert_left_   = GetParam<bool>(*this, "invert_left");
+    invert_right_  = GetParam<bool>(*this, "invert_right");
+    rpm_scale_     = GetParam<int>(*this, "rpm_scale");
+    min_abs_rpm_command_ = GetParam<double>(*this, "min_abs_rpm_command");
 
     // 피드백 설정
-    bc_on_start_     = declare_parameter<bool>("main_data_broadcast_on_start", true);
-    req_monitor_id_  = static_cast<uint8_t>(declare_parameter<int>("req_monitor_id", REQUEST_PNT_MAIN_DATA));
-    use_polling_fb_  = declare_parameter<bool>("use_polling_feedback", false);
-    request_hz_      = declare_parameter<double>("request_hz", 20.0);     // 폴링 시 전용
-    tx_rate_hz_      = declare_parameter<double>("tx_rate_hz", 50.0);     // TX 속도 제한
+    bc_on_start_     = GetParam<bool>(*this, "main_data_broadcast_on_start");
+    req_monitor_id_  = GetParamUint8<uint8_t>(*this, "req_monitor_id");
+    use_polling_fb_  = GetParam<bool>(*this, "use_polling_feedback");
+    request_hz_      = GetParam<double>(*this, "request_hz");
+    tx_rate_hz_      = GetParam<double>(*this, "tx_rate_hz");
 
     // 오돔/TF/조인트
-    base_frame_id_   = declare_parameter<std::string>("base_frame_id", "base_link");
-    odom_frame_id_   = declare_parameter<std::string>("odom_frame_id", "odom");
-    publish_tf_      = declare_parameter<bool>("publish_tf", true);
-    loop_hz_         = declare_parameter<double>("loop_hz", 100.0);
-    wheel_radius_    = declare_parameter<double>("wheel_radius", 0.065);
-    wheel_length_    = declare_parameter<double>("wheel_length", 0.4465);
-    left_joint_name_ = declare_parameter<std::string>("left_joint_name",  "wheel_left_joint");
-    right_joint_name_= declare_parameter<std::string>("right_joint_name", "wheel_right_joint");
+    base_frame_id_   = GetParam<std::string>(*this, "base_frame_id");
+    odom_frame_id_   = GetParam<std::string>(*this, "odom_frame_id");
+    publish_tf_      = GetParam<bool>(*this, "publish_tf");
+    loop_hz_         = GetParam<double>(*this, "loop_hz");
+    wheel_radius_    = GetParam<double>(*this, "wheel_radius");
+    wheel_length_    = GetParam<double>(*this, "wheel_length");
+    left_joint_name_ = GetParam<std::string>(*this, "left_joint_name");
+    right_joint_name_= GetParam<std::string>(*this, "right_joint_name");
 
     // 피드백 끊김 시 추정 사용
-    use_cmd_fallback_for_odom_ = declare_parameter<bool>("odom_use_cmd_if_no_rx", true);
-    rx_stale_sec_              = declare_parameter<double>("rx_stale_sec", 0.3);
+    use_cmd_fallback_for_odom_ = GetParam<bool>(*this, "odom_use_cmd_if_no_rx");
+    rx_stale_sec_              = GetParam<double>(*this, "rx_stale_sec");
+
+    RCLCPP_INFO(get_logger(),
+      "Params loaded (YAML only). port=%s baud=%d rmid=%u pcid=%u id=%u loop=%.1fHz",
+      device_.c_str(), baudrate_, rmid_, pcid_, fixed_id_, loop_hz_);
   }
 
   // ========= 시리얼 =========
@@ -227,7 +261,7 @@ private:
     // 마지막 명령만 저장 — 송신은 주기 타이머에서
     last_cmd_left_rad_s_  = msg->x;
     last_cmd_right_rad_s_ = msg->y;
-    last_cmd_time_ = now();
+    last_cmd_time_ = this->get_clock()->now();
   }
 
   void TickTx()
@@ -238,8 +272,6 @@ private:
 
   void RequestFeedbackOnce()
   {
-    // 일부 보드에서 PID_REQ_PID_DATA(4)의 payload=210(요청 PID) 형태를 사용
-    // 정확한 스펙이 없으므로, 가장 널리 쓰이는 1바이트 payload로 요청 시도
     const uint8_t req_pid = PID_PNT_MAIN_DATA;
     SendRaw(PID_REQ_PID_DATA, &req_pid, 1);
   }
@@ -258,7 +290,7 @@ private:
       // RX에도 극성 동일 적용
       last_left_rad_s_rx_  = (invert_left_  ? -1.0 : 1.0) * RpmToRadPerSec(l_rpm);
       last_right_rad_s_rx_ = (invert_right_ ? -1.0 : 1.0) * RpmToRadPerSec(r_rpm);
-      last_rx_time_ = now();
+      last_rx_time_ = this->get_clock()->now();
 
       // JointState (RX 기반)
       sensor_msgs::msg::JointState js;
@@ -271,7 +303,7 @@ private:
 
   void IntegrateAndPublish()
   {
-    const auto tnow = now();
+    const auto tnow = this->get_clock()->now();
     double dt = (tnow - last_time_).seconds();
     if (dt <= 0.0) dt = 1.0 / std::max(1.0, loop_hz_);
     last_time_ = tnow;
@@ -395,7 +427,8 @@ private:
 int main(int argc, char** argv)
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<SerialBridgeNode>());
+  auto node = std::make_shared<SerialBridgeNode>();
+  rclcpp::spin(node);
   rclcpp::shutdown();
   return 0;
 }
