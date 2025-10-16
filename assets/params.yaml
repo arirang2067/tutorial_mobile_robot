@@ -8,7 +8,7 @@ defaults:
   ros__parameters:
     # ───────── Frames (공통) ─────────
     common_frames: &common_frames
-      base_frame_id: "base_link"            # [frame_id]
+      base_frame_id: "base_footprint"       # [frame_id]
       odom_frame_id: "odom"                 # [frame_id]
       left_joint_name: "wheel_left_joint"   # [joint name]
       right_joint_name: "wheel_right_joint" # [joint name]
