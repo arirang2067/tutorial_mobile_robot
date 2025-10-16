@@ -47,14 +47,6 @@ def _setup(context, *args, **kwargs):
         output='screen'
     )
 
-    static_tf = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        arguments=['--x','0','--y','0','--z','0','--qx','0','--qy','0','--qz','0','--qw','1',
-                   '--frame-id','odom','--child-frame-id','base_footprint'],
-        output='screen'
-    )
-
     desc_pub = Node(
         package='tutorial_mobile_robot',
         executable='robot_description_topic_publisher',
@@ -73,4 +65,4 @@ def _setup(context, *args, **kwargs):
         ],
     )
 
-    return [jsp, rsp, static_tf, desc_pub, sim]
+    return [jsp, rsp, desc_pub, sim]
